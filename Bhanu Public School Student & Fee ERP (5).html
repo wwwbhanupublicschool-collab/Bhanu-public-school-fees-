@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhanu Public School - Student & Fee ERP</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1a237e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Bhanu Public ERP">
+    
+    <!-- Inline Web App Manifest -->
+    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Bhanu%20Public%20School%20ERP%22%2C%22short_name%22%3A%22Bhanu%20ERP%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f4f6f9%22%2C%22theme_color%22%3A%22%231a237e%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fplacehold.co%2F192x192%2F1a237e%2Ff9a825%3Ftext%3DBPS%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fpng%22%7D%2C%7B%22src%22%3A%22https%3A%2F%2Fplacehold.co%2F512x512%2F1a237e%2Ff9a825%3Ftext%3DBPS%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printableReceipt, #printableReceipt * {
+                visibility: visible;
+            }
+            #printableReceipt {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 15px;
+                box-shadow: none;
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 pb-24">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-indigo-900 to-indigo-800 text-white p-4 shadow-md sticky top-0 z-40 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="w-11 h-11 bg-slate-900 border-2 border-amber-400 rounded-full flex flex-col items-center justify-center font-extrabold text-xs text-amber-400 shadow-inner flex-shrink-0">
+                BPS
+            </div>
+            <div>
+                <h1 class="text-base font-extrabold tracking-tight">BHANU PUBLIC SCHOOL</h1>
+                <p class="text-[11px] text-indigo-200">Gadala, Rajahmundry • Student & Fee ERP</p>
+            </div>
+        </div>
+        <!-- Install PWA Button -->
+        <button id="installAppBtn" onclick="installPWA()" class="hidden bg-amber-400 hover:bg-amber-500 text-slate-900 px-3 py-1.5 rounded-lg font-bold text-xs shadow transition-transform active:scale-95 flex items-center gap-1 flex-shrink-0 animate-bounce">
+            📥 Install App
+        </button>
+    </header>
+
+    <main class="max-w-xl mx-auto p-4">
+        
+        <!-- VIEW 1: SEARCH & LIST -->
+        <section id="view-search" class="view-section">
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4">
+                <h2 class="text-base font-bold text-indigo-900 flex items-center gap-1.5 mb-1">
+                    🔍 Search Student Details & Fee Status
+                </h2>
+                <p class="text-xs text-slate-500 mb-3">Type Student Name, Roll No, or Mobile Number to get full details instantly</p>
+                <input type="text" id="searchInput" oninput="filterStudents()" placeholder="Enter Student Name (e.g., Sai Charan)" 
+                    class="w-full px-4 py-3 border-2 border-blue-200 focus:border-indigo-700 rounded-xl text-sm outline-none transition-all shadow-inner">
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-3 gap-3 mb-4">
+                <div class="bg-white p-3 rounded-2xl text-center shadow-sm border border-slate-100">
+                    <div id="statTotal" class="text-lg font-black text-indigo-900">0</div>
+                    <div class="text-[11px] font-semibold text-slate-500 mt-0.5">Total Students</div>
+                </div>
+                <div class="bg-white p-3 rounded-2xl text-center shadow-sm border border-slate-100">
+                    <div id="statCollected" class="text-lg font-black text-emerald-600">₹0</div>
+                    <div class="text-[11px] font-semibold text-slate-500 mt-0.5">Fee Collected</div>
+                </div>
+                <div class="bg-white p-3 rounded-2xl text-center shadow-sm border border-slate-100">
+                    <div id="statDue" class="text-lg font-black text-rose-600">₹0</div>
+                    <div class="text-[11px] font-semibold text-slate-500 mt-0.5">Balance Due</div>
+                </div>
+            </div>
+
+            <!-- Student Cards Container -->
+            <div id="studentContainer" class="space-y-4">
+                <!-- Dynamically populated -->
+            </div>
+        </section>
+
+        <!-- VIEW 2: ADD STUDENT -->
+        <section id="view-add" class="view-section hidden">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                <h2 class="text-base font-bold text-indigo-900 mb-1">➕ Add New Student Record</h2>
+                <p class="text-xs text-slate-500 mb-4">Enter complete student information and initial fee payment</p>
+                
+                <form onsubmit="handleAddNewStudent(event)" class="space-y-3.5">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Student Full Name *</label>
+                        <input type="text" id="addName" required placeholder="e.g., K. Sai Charan" class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:border-indigo-800 outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Class & Section *</label>
+                            <input type="text" id="addClass" required placeholder="e.g., 10th Class" class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:border-indigo-800 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Roll / Admission No *</label>
+                            <input type="text" id="addRoll" required placeholder="e.g., BPS-1006" class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:border-indigo-800 outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Parent Name *</label>
+                        <input type="text" id="addParent" required placeholder="e.g., K. Srinivas Rao" class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:border-indigo-800 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Mobile Number *</label>
+                        <input type="tel" id="addMobile" required placeholder="e.g., 9849800385" class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:border-indigo-800 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Address *</label>
+                        <input type="text" id="addAddress" required placeholder="e.g., Near Gadala School, Rajahmundry" class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:border-indigo-800 outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Total Fee (₹) *</label>
+                            <input type="number" id="addTotalFee" required placeholder="28000" min="0" class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:border-indigo-800 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Initial Paid (₹) *</label>
+                            <input type="number" id="addPaidFee" required placeholder="20000" min="0" class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:border-indigo-800 outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Initial Payment Mode</label>
+                        <select id="addPaymentMode" class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:border-indigo-800 outline-none bg-white">
+                            <option value="Cash">Cash</option>
+                            <option value="UPI / PhonePe / GPay">UPI / PhonePe / GPay</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Cheque">Cheque</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-indigo-900 hover:bg-indigo-800 text-white font-bold py-3.5 rounded-xl text-sm shadow-md transition-all active:scale-[0.99] mt-2">
+                        Save Student Record
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- VIEW 3: ALL TRANSACTIONS -->
+        <section id="view-transactions" class="view-section hidden">
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4">
+                <div class="flex items-center justify-between mb-1">
+                    <h2 class="text-base font-bold text-indigo-900">📜 All Payment Transactions</h2>
+                    <span id="totalTxnBadge" class="bg-indigo-100 text-indigo-900 text-xs font-bold px-2.5 py-0.5 rounded-full">0 Txns</span>
+                </div>
+                <p class="text-xs text-slate-500 mb-3">Complete chronological ledger of all student fee payments</p>
+                <input type="text" id="txnSearchInput" oninput="renderAllTransactions()" placeholder="Filter by student name, receipt #, or mode..." 
+                    class="w-full px-3.5 py-2.5 border border-slate-300 focus:border-indigo-700 rounded-xl text-xs outline-none">
+            </div>
+
+            <div id="allTransactionsList" class="space-y-2.5">
+                <!-- Dynamically populated -->
+            </div>
+        </section>
+
+        <!-- VIEW 4: ADMIN & EXPORT -->
+        <section id="view-admin" class="view-section hidden">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4">
+                <h2 class="text-base font-bold text-indigo-900">⚙️ Admin Control & Backup</h2>
+                <p class="text-xs text-slate-500">Easily export your student database, transaction history, or reset records offline.</p>
+                
+                <button onclick="exportToCSV()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3.5 rounded-xl text-sm shadow flex items-center justify-center gap-2">
+                    📥 Download Student Fee Report (CSV)
+                </button>
+                <button onclick="exportTransactionsCSV()" class="w-full bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-3.5 rounded-xl text-sm shadow flex items-center justify-center gap-2">
+                    🧾 Download Payment History Ledger (CSV)
+                </button>
+                <button onclick="exportJSONBackup()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3.5 rounded-xl text-sm shadow flex items-center justify-center gap-2">
+                    💾 Backup Full Data (JSON)
+                </button>
+                <button onclick="resetDefaultData()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3.5 rounded-xl text-sm shadow flex items-center justify-center gap-2">
+                    🔄 Reset Sample Records
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 py-2.5 px-3 flex justify-around shadow-lg z-40">
+        <button onclick="switchTab('search', this)" class="nav-btn flex flex-col items-center text-indigo-900 font-bold text-[11px] gap-1 transition-all">
+            <span class="text-lg">🔍</span>
+            <span>Students</span>
+        </button>
+        <button onclick="switchTab('add', this)" class="nav-btn flex flex-col items-center text-slate-400 font-semibold text-[11px] gap-1 transition-all">
+            <span class="text-lg">➕</span>
+            <span>Add Student</span>
+        </button>
+        <button onclick="switchTab('transactions', this)" class="nav-btn flex flex-col items-center text-slate-400 font-semibold text-[11px] gap-1 transition-all">
+            <span class="text-lg">📜</span>
+            <span>History</span>
+        </button>
+        <button onclick="switchTab('admin', this)" class="nav-btn flex flex-col items-center text-slate-400 font-semibold text-[11px] gap-1 transition-all">
+            <span class="text-lg">⚙️</span>
+            <span>Admin</span>
+        </button>
+    </nav>
+
+    <!-- Record Payment / Edit Fee Modal -->
+    <div id="payModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl">
+            <h3 id="modalTitle" class="text-base font-bold text-indigo-900 mb-1">Record Fee Payment</h3>
+            <p id="modalSubtitle" class="text-xs text-slate-500 mb-3"></p>
+            
+            <div class="space-y-3">
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex justify-between text-xs">
+                    <span>Current Paid: <strong id="modalCurrentPaid" class="text-emerald-600">₹0</strong></span>
+                    <span>Balance Due: <strong id="modalCurrentDue" class="text-rose-600">₹0</strong></span>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">New Installment Amount to Pay (₹) *</label>
+                    <input type="number" id="modalNewPayment" placeholder="e.g., 5000" min="0" class="w-full p-3 border-2 border-indigo-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-900">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Payment Mode</label>
+                        <select id="modalPayMode" class="w-full p-2.5 border border-slate-300 rounded-xl text-xs outline-none focus:border-indigo-900 bg-white">
+                            <option value="Cash">Cash</option>
+                            <option value="UPI / PhonePe / GPay">UPI / GPay</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Cheque">Cheque</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Payment Date</label>
+                        <input type="date" id="modalPayDate" class="w-full p-2.5 border border-slate-300 rounded-xl text-xs outline-none focus:border-indigo-900">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Remarks / Note (Optional)</label>
+                    <input type="text" id="modalPayNote" placeholder="e.g., Term 2 Fee" class="w-full p-2.5 border border-slate-300 rounded-xl text-xs outline-none focus:border-indigo-900">
+                </div>
+
+                <details class="text-xs text-slate-500 pt-1">
+                    <summary class="cursor-pointer font-semibold text-indigo-800">Edit Total Fee Structure</summary>
+                    <div class="mt-2">
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-1">Total Annual Fee (₹)</label>
+                        <input type="number" id="modalTotalFee" class="w-full p-2.5 border border-slate-300 rounded-xl text-xs outline-none focus:border-indigo-900">
+                    </div>
+                </details>
+            </div>
+
+            <div class="flex gap-3 mt-5">
+                <button onclick="closePayModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl text-sm">Cancel</button>
+                <button onclick="saveFeeUpdate()" class="flex-1 bg-indigo-900 hover:bg-indigo-800 text-white font-bold py-3 rounded-xl text-sm">Save Payment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Payment History Modal -->
+    <div id="historyModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl p-5 w-full max-w-md shadow-2xl max-h-[85vh] flex flex-col">
+            <div class="flex justify-between items-start border-b border-slate-100 pb-3 mb-3">
+                <div>
+                    <h3 id="histStudentName" class="text-base font-extrabold text-indigo-900">Student Name</h3>
+                    <p id="histStudentMeta" class="text-xs text-slate-500">Roll No • Class</p>
+                </div>
+                <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg px-1">✕</button>
+            </div>
+
+            <!-- Summary Strip -->
+            <div class="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center mb-3 text-xs">
+                <div>
+                    <span class="text-slate-500 block text-[10px]">Total Fee</span>
+                    <strong id="histTotalFee" class="text-slate-800">₹0</strong>
+                </div>
+                <div>
+                    <span class="text-slate-500 block text-[10px]">Total Paid</span>
+                    <strong id="histPaidFee" class="text-emerald-600">₹0</strong>
+                </div>
+                <div>
+                    <span class="text-slate-500 block text-[10px]">Balance Due</span>
+                    <strong id="histDueFee" class="text-rose-600">₹0</strong>
+                </div>
+            </div>
+
+            <!-- Transaction List -->
+            <div id="histListContainer" class="overflow-y-auto space-y-2.5 flex-1 pr-1">
+                <!-- Populated dynamically -->
+            </div>
+
+            <div class="mt-4 pt-2 border-t border-slate-100 flex gap-2">
+                <button onclick="closeHistoryModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl text-xs">Close</button>
+                <button id="histAddPayBtn" class="flex-1 bg-indigo-900 hover:bg-indigo-800 text-white font-bold py-2.5 rounded-xl text-xs">+ Add Payment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Bill / Receipt Modal -->
+    <div id="printModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <button onclick="closePrintModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+            
+            <div id="printableReceipt" class="space-y-4 pt-2">
+                <div class="text-center border-b border-dashed border-slate-300 pb-3">
+                    <div class="inline-block bg-indigo-900 text-amber-400 font-black text-xs px-2.5 py-1 rounded-full mb-1">BHANU PUBLIC SCHOOL</div>
+                    <h2 class="text-base font-extrabold text-slate-900">FEES PAYMENT RECEIPT</h2>
+                    <p class="text-[11px] text-slate-500">Gadala, Rajahmundry • Ph: 9849800385</p>
+                </div>
+
+                <div class="grid grid-cols-2 text-xs gap-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <div><span class="text-slate-500">Receipt No:</span> <strong id="recReceiptNo" class="font-mono text-indigo-900"></strong></div>
+                    <div><span class="text-slate-500">Date:</span> <strong id="recDate"></strong></div>
+                    <div><span class="text-slate-500">Student Name:</span> <strong id="recName"></strong></div>
+                    <div><span class="text-slate-500">Roll No:</span> <strong id="recRoll"></strong></div>
+                    <div><span class="text-slate-500">Class:</span> <strong id="recClass"></strong></div>
+                    <div><span class="text-slate-500">Mode:</span> <strong id="recMode"></strong></div>
+                </div>
+
+                <div class="border border-slate-200 rounded-xl overflow-hidden text-xs">
+                    <div class="bg-indigo-900 text-white px-3 py-2 font-bold flex justify-between">
+                        <span>Description</span>
+                        <span>Amount (₹)</span>
+                    </div>
+                    <div class="p-3 space-y-1.5 bg-white">
+                        <div class="flex justify-between">
+                            <span>School Tuition & Term Fee Installment</span>
+                            <span id="recAmount" class="font-bold text-indigo-900">₹0</span>
+                        </div>
+                        <div class="flex justify-between text-slate-500 pt-1 border-t border-slate-100">
+                            <span>Note / Remarks</span>
+                            <span id="recNote">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl flex justify-between text-xs">
+                    <div>
+                        <span class="block text-slate-600 text-[10px]">Total Annual Fee: <strong id="recTotal" class="text-slate-900"></strong></span>
+                        <span class="block text-slate-600 text-[10px]">Total Paid So Far: <strong id="recTotalPaid" class="text-emerald-700"></strong></span>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-slate-600 text-[10px]">Remaining Balance Due</span>
+                        <strong id="recBalanceDue" class="text-rose-600 font-bold text-sm"></strong>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-end pt-4 text-xs">
+                    <div class="text-[10px] text-slate-400">
+                        Computer Generated Fee Receipt<br>Authorized Signatory • Bhanu Public School
+                    </div>
+                    <div class="w-24 border-b border-dashed border-slate-400 pb-1 text-center font-semibold text-[10px]">
+                        Seal & Signature
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-5 pt-3 border-t border-slate-100">
+                <button onclick="closePrintModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl text-xs">Close</button>
+                <button onclick="window.print()" class="flex-1 bg-indigo-900 hover:bg-indigo-800 text-white font-bold py-3 rounded-xl text-xs shadow">🖨️ Print Bill / Receipt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application JavaScript -->
+    <script>
+        /* --- Initial Mock Database & State --- */
+        let students = JSON.parse(localStorage.getItem('bps_students')) || [
+            { id: 1, name: "K. Sai Charan", class: "10th Class", roll: "BPS-1001", parent: "K. Srinivas Rao", mobile: "9849800385", address: "Gadala, Rajahmundry", totalFee: 28000, paidFee: 20000, history: [{ receiptNo: "REC-5001", date: "2026-04-10", amount: 20000, mode: "Cash", note: "Advance & Term 1" }] },
+            { id: 2, name: "P. Naga Lahari", class: "9th Class", roll: "BPS-902", parent: "P. Satyanarayana", mobile: "9490123456", address: "Main Road, Gadala", totalFee: 26000, paidFee: 26000, history: [{ receiptNo: "REC-5002", date: "2026-04-12", amount: 26000, mode: "UPI / PhonePe / GPay", note: "Full Annual Fee Paid" }] },
+            { id: 3, name: "M. Vamsi Krishna", class: "8th Class", roll: "BPS-803", parent: "M. Ramu", mobile: "9123456789", address: "School Area, Gadala", totalFee: 24000, paidFee: 12000, history: [{ receiptNo: "REC-5003", date: "2026-05-01", amount: 12000, mode: "Cash", note: "Term 1 Installment" }] },
+            { id: 4, name: "Ch. Divya Sree", class: "7th Class", roll: "BPS-704", parent: "Ch. Venkata Rao", mobile: "9988776655", address: "Gadala Center", totalFee: 22000, paidFee: 15000, history: [{ receiptNo: "REC-5004", date: "2026-05-15", amount: 15000, mode: "Bank Transfer", note: "Term 1 Fee" }] },
+            { id: 5, name: "D. Akhil Kumar", class: "6th Class", roll: "BPS-605", parent: "D. Subba Rao", mobile: "9876543210", address: "Near Hanuman Temple, Gadala", totalFee: 20000, paidFee: 8000, history: [{ receiptNo: "REC-5005", date: "2026-06-01", amount: 8000, mode: "Cash", note: "Registration & Part Payment" }] }
+        ];
+
+        let activeStudentId = null;
+        let deferredPrompt = null;
+
+        window.onload = function() {
+            renderStudents(students);
+            updateDashboardStats();
+            renderAllTransactions();
+        };
+
+        /* --- PWA Install Prompt --- */
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installAppBtn').classList.remove('hidden');
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        document.getElementById('installAppBtn').classList.add('hidden');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        }
+
+        /* --- Tab Navigation --- */
+        function switchTab(tabId, btnEl) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                b.className = "nav-btn flex flex-col items-center text-slate-400 font-semibold text-[11px] gap-1 transition-all";
+            });
+            btnEl.className = "nav-btn flex flex-col items-center text-indigo-900 font-bold text-[11px] gap-1 transition-all";
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (tabId === 'transactions') {
+                renderAllTransactions();
+            }
+        }
+
+        /* --- Save Local Storage --- */
+        function saveData() {
+            localStorage.setItem('bps_students', JSON.stringify(students));
+            updateDashboardStats();
+        }
+
+        /* --- Update Dashboard Stats --- */
+        function updateDashboardStats() {
+            const totalStudents = students.length;
+            let totalCollected = 0;
+            let totalDue = 0;
+
+            students.forEach(s => {
+                totalCollected += Number(s.paidFee);
+                totalDue += Math.max(0, Number(s.totalFee) - Number(s.paidFee));
+            });
+
+            document.getElementById('statTotal').textContent = totalStudents;
+            document.getElementById('statCollected').textContent = '₹' + totalCollected.toLocaleString('en-IN');
+            document.getElementById('statDue').textContent = '₹' + totalDue.toLocaleString('en-IN');
+        }
+
+        /* --- Render Students List --- */
+        function renderStudents(list) {
+            const container = document.getElementById('studentContainer');
+            if (list.length === 0) {
+                container.innerHTML = `<div class="bg-white p-8 rounded-2xl text-center text-slate-400 text-xs border border-slate-100">No student records found matching your query.</div>`;
+                return;
+            }
+
+            container.innerHTML = list.map(s => {
+                const balance = Math.max(0, s.totalFee - s.paidFee);
+                const percent = s.totalFee > 0 ? Math.min(100, Math.round((s.paidFee / s.totalFee) * 100)) : 0;
+                const statusBadge = balance === 0 
+                    ? `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full">PAID FULL ✓</span>`
+                    : `<span class="bg-amber-100 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full">DUE: ₹${balance.toLocaleString('en-IN')}</span>`;
+
+                return `
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="bg-indigo-50 text-indigo-900 text-[10px] font-bold px-2 py-0.5 rounded">${s.class}</span>
+                                <h3 class="text-sm font-extrabold text-slate-900 mt-1">${s.name}</h3>
+                                <p class="text-[11px] text-slate-500">Roll: <strong class="text-slate-700">${s.roll}</strong> • Parent: ${s.parent}</p>
+                            </div>
+                            <div>${statusBadge}</div>
+                        </div>
+
+                        <!-- Fee Progress Bar -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-[11px] font-semibold">
+                                <span class="text-slate-500">Fee Paid: <strong class="text-emerald-600">₹${Number(s.paidFee).toLocaleString('en-IN')}</strong> / ₹${Number(s.totalFee).toLocaleString('en-IN')}</span>
+                                <span class="text-indigo-900">${percent}%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-indigo-900 h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                            <span class="text-slate-500">📞 <a href="tel:${s.mobile}" class="text-indigo-700 font-semibold hover:underline">${s.mobile}</a></span>
+                            <div class="flex gap-1.5 flex-wrap justify-end">
+                                <button onclick="openHistoryModal(${s.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded-lg font-bold transition">
+                                    📜 History
+                                </button>
+                                <button onclick="openEditStudentModal(${s.id})" class="bg-amber-100 hover:bg-amber-200 text-amber-900 px-2 py-1 rounded-lg font-bold transition">
+                                    ✏️ Edit
+                                </button>
+                                <button onclick="deleteStudent(${s.id})" class="bg-rose-50 hover:bg-rose-100 text-rose-700 px-2 py-1 rounded-lg font-bold transition">
+                                    🗑️
+                                </button>
+                                <button onclick="openPayModal(${s.id})" class="bg-indigo-900 hover:bg-indigo-800 text-white px-2.5 py-1 rounded-lg font-bold transition shadow-sm">
+                                    + Pay
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        /* --- Instant Search Filter --- */
+        function filterStudents() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtered = students.filter(s => 
+                s.name.toLowerCase().includes(query) ||
+                s.roll.toLowerCase().includes(query) ||
+                s.mobile.includes(query) ||
+                s.class.toLowerCase().includes(query)
+            );
+            renderStudents(filtered);
+        }
+
+        /* --- Add New Student --- */
+        function handleAddNewStudent(e) {
+            e.preventDefault();
+            const name = document.getElementById('addName').value.trim();
+            const cls = document.getElementById('addClass').value.trim();
+            const roll = document.getElementById('addRoll').value.trim();
+            const parent = document.getElementById('addParent').value.trim();
+            const mobile = document.getElementById('addMobile').value.trim();
+            const address = document.getElementById('addAddress').value.trim();
+            const totalFee = Number(document.getElementById('addTotalFee').value);
+            const paidFee = Number(document.getElementById('addPaidFee').value);
+            const mode = document.getElementById('addPaymentMode').value;
+
+            const receiptNo = 'REC-' + Math.floor(1000 + Math.random() * 9000);
+            const today = new Date().toISOString().split('T')[0];
+
+            const newStudent = {
+                id: Date.now(),
+                name, class: cls, roll, parent, mobile, address, totalFee, paidFee,
+                history: paidFee > 0 ? [{ receiptNo, date: today, amount: paidFee, mode, note: "Initial Fee Admission" }] : []
+            };
+
+            students.unshift(newStudent);
+            saveData();
+            renderStudents(students);
+            renderAllTransactions();
+
+            alert('Student record added successfully!');
+            document.querySelector('form').reset();
+            switchTab('search', document.querySelectorAll('.nav-btn')[0]);
+        }
+
+        /* --- Record Payment Modal --- */
+        function openPayModal(studentId) {
+            activeStudentId = studentId;
+            const s = students.find(item => item.id === studentId);
+            if (!s) return;
+
+            const balance = Math.max(0, s.totalFee - s.paidFee);
+            document.getElementById('modalTitle').textContent = `Record Payment: ${s.name}`;
+            document.getElementById('modalSubtitle').textContent = `${s.class} • Roll: ${s.roll}`;
+            document.getElementById('modalCurrentPaid').textContent = '₹' + s.paidFee.toLocaleString('en-IN');
+            document.getElementById('modalCurrentDue').textContent = '₹' + balance.toLocaleString('en-IN');
+            document.getElementById('modalNewPayment').value = '';
+            document.getElementById('modalTotalFee').value = s.totalFee;
+            document.getElementById('modalPayNote').value = 'Installment Fee Payment';
+            document.getElementById('modalPayDate').value = new Date().toISOString().split('T')[0];
+
+            document.getElementById('payModal').classList.remove('hidden');
+            document.getElementById('payModal').classList.add('flex');
+        }
+
+        function closePayModal() {
+            document.getElementById('payModal').classList.add('hidden');
+            document.getElementById('payModal').classList.remove('flex');
+            activeStudentId = null;
+        }
+
+        function saveFeeUpdate() {
+            const s = students.find(item => item.id === activeStudentId);
+            if (!s) return;
+
+            const newPayment = Number(document.getElementById('modalNewPayment').value);
+            const newTotalFee = Number(document.getElementById('modalTotalFee').value);
+            const mode = document.getElementById('modalPayMode').value;
+            const date = document.getElementById('modalPayDate').value || new Date().toISOString().split('T')[0];
+            const note = document.getElementById('modalPayNote').value || 'Fee Installment';
+
+            if (isNaN(newPayment) || newPayment <= 0) {
+                alert('Please enter a valid payment amount.');
+                return;
+            }
+
+            s.totalFee = newTotalFee;
+            s.paidFee += newPayment;
+
+            const receiptNo = 'REC-' + Math.floor(1000 + Math.random() * 9000);
+            const txn = { receiptNo, date, amount: newPayment, mode, note };
+            s.history.unshift(txn);
+
+            saveData();
+            renderStudents(students);
+            renderAllTransactions();
+            closePayModal();
+
+            // Open print receipt for this transaction
+            openPrintModal(s, txn);
+        }
+
+        /* --- Student Payment History Modal --- */
+        function openHistoryModal(studentId) {
+            const s = students.find(item => item.id === studentId);
+            if (!s) return;
+
+            document.getElementById('histStudentName').textContent = s.name;
+            document.getElementById('histStudentMeta').textContent = `Roll: ${s.roll} • ${s.class} • Parent: ${s.parent}`;
+            document.getElementById('histTotalFee').textContent = '₹' + Number(s.totalFee).toLocaleString('en-IN');
+            document.getElementById('histPaidFee').textContent = '₹' + Number(s.paidFee).toLocaleString('en-IN');
+            const due = Math.max(0, s.totalFee - s.paidFee);
+            document.getElementById('histDueFee').textContent = '₹' + due.toLocaleString('en-IN');
+
+            const container = document.getElementById('histListContainer');
+            if (!s.history || s.history.length === 0) {
+                container.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs">No payment transactions recorded yet.</div>`;
+            } else {
+                container.innerHTML = s.history.map(h => `
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex justify-between items-center text-xs">
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <strong class="text-indigo-900 font-mono">${h.receiptNo}</strong>
+                                <span class="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded">${h.mode}</span>
+                            </div>
+                            <p class="text-slate-500 text-[11px] mt-0.5">${h.note} • ${h.date}</p>
+                        </div>
+                        <div class="text-right">
+                            <strong class="text-emerald-600 text-sm font-black">+₹${h.amount.toLocaleString('en-IN')}</strong>
+                            <div><button onclick="reprintReceipt(${s.id}, '${h.receiptNo}')" class="text-[10px] text-indigo-700 hover:underline font-semibold">Print Receipt</button></div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('histAddPayBtn').onclick = function() {
+                closeHistoryModal();
+                openPayModal(s.id);
+            };
+
+            document.getElementById('historyModal').classList.remove('hidden');
+            document.getElementById('historyModal').classList.add('flex');
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').classList.add('hidden');
+            document.getElementById('historyModal').classList.remove('flex');
+        }
+
+        function reprintReceipt(studentId, receiptNo) {
+            const s = students.find(item => item.id === studentId);
+            if (!s) return;
+            const txn = s.history.find(h => h.receiptNo === receiptNo);
+            if (!txn) return;
+
+            closeHistoryModal();
+            openPrintModal(s, txn);
+        }
+
+        /* --- Edit & Delete Student Record --- */
+        let editingStudentId = null;
+        function openEditStudentModal(studentId) {
+            const s = students.find(item => item.id === studentId);
+            if (!s) return;
+            editingStudentId = studentId;
+
+            document.getElementById('editName').value = s.name;
+            document.getElementById('editClass').value = s.class;
+            document.getElementById('editRoll').value = s.roll;
+            document.getElementById('editParent').value = s.parent;
+            document.getElementById('editMobile').value = s.mobile;
+            document.getElementById('editAddress').value = s.address;
+            document.getElementById('editTotalFee').value = s.totalFee;
+
+            document.getElementById('editStudentModal').classList.remove('hidden');
+            document.getElementById('editStudentModal').classList.add('flex');
+        }
+
+        function closeEditStudentModal() {
+            document.getElementById('editStudentModal').classList.add('hidden');
+            document.getElementById('editStudentModal').classList.remove('flex');
+            editingStudentId = null;
+        }
+
+        function saveStudentEdits(e) {
+            e.preventDefault();
+            const s = students.find(item => item.id === editingStudentId);
+            if (!s) return;
+
+            s.name = document.getElementById('editName').value.trim();
+            s.class = document.getElementById('editClass').value.trim();
+            s.roll = document.getElementById('editRoll').value.trim();
+            s.parent = document.getElementById('editParent').value.trim();
+            s.mobile = document.getElementById('editMobile').value.trim();
+            s.address = document.getElementById('editAddress').value.trim();
+            s.totalFee = Number(document.getElementById('editTotalFee').value);
+
+            saveData();
+            renderStudents(students);
+            renderAllTransactions();
+            closeEditStudentModal();
+            alert('Student details updated successfully!');
+        }
+
+        function deleteStudent(studentId) {
+            if (confirm('Are you sure you want to delete this student and all associated payment history?')) {
+                students = students.filter(s => s.id !== studentId);
+                saveData();
+                renderStudents(students);
+                renderAllTransactions();
+            }
+        }
+
+        /* --- All Transactions Ledger View --- */
+        function renderAllTransactions() {
+            let allTxns = [];
+            students.forEach(s => {
+                if (s.history && s.history.length > 0) {
+                    s.history.forEach(h => {
+                        allTxns.push({
+                            studentId: s.id,
+                            studentName: s.name,
+                            studentClass: s.class,
+                            roll: s.roll,
+                            ...h
+                        });
+                    });
+                }
+            });
+
+            // Sort by date descending
+            allTxns.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const query = document.getElementById('txnSearchInput') ? document.getElementById('txnSearchInput').value.toLowerCase().trim() : '';
+            const filtered = allTxns.filter(t => 
+                t.studentName.toLowerCase().includes(query) ||
+                t.receiptNo.toLowerCase().includes(query) ||
+                t.mode.toLowerCase().includes(query) ||
+                t.roll.toLowerCase().includes(query)
+            );
+
+            document.getElementById('totalTxnBadge').textContent = `${filtered.length} Txns`;
+
+            const container = document.getElementById('allTransactionsList');
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="bg-white p-8 rounded-2xl text-center text-slate-400 text-xs border border-slate-100">No payment transactions found.</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(t => `
+                <div class="bg-white p-3.5 rounded-xl border border-slate-200 flex justify-between items-center text-xs shadow-xs">
+                    <div>
+                        <div class="flex items-center gap-1.5 mb-0.5">
+                            <span class="font-mono font-bold text-indigo-900 bg-indigo-50 px-1.5 py-0.5 rounded text-[10px]">${t.receiptNo}</span>
+                            <span class="text-slate-800 font-extrabold">${t.studentName}</span>
+                            <span class="text-[10px] text-slate-400">(${t.studentClass})</span>
+                        </div>
+                        <p class="text-slate-500 text-[11px]">${t.note} • ${t.date} via <strong class="text-slate-700">${t.mode}</strong></p>
+                    </div>
+                    <div class="text-right flex items-center gap-2">
+                        <div>
+                            <div class="text-emerald-600 font-black text-sm">+₹${t.amount.toLocaleString('en-IN')}</div>
+                            <button onclick="reprintReceipt(${t.studentId}, '${t.receiptNo}')" class="text-[10px] text-indigo-700 hover:underline font-semibold">Print</button>
+                        </div>
+                        <button onclick="deleteTransaction(${t.studentId}, '${t.receiptNo}')" class="text-rose-500 hover:text-rose-700 p-1 font-bold" title="Delete Transaction">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteTransaction(studentId, receiptNo) {
+            if (confirm(`Are you sure you want to delete transaction ${receiptNo}? This will adjust the student's paid fee.`)) {
+                const s = students.find(item => item.id === studentId);
+                if (!s) return;
+
+                const txnIndex = s.history.findIndex(h => h.receiptNo === receiptNo);
+                if (txnIndex !== -1) {
+                    const removedAmt = s.history[txnIndex].amount;
+                    s.paidFee = Math.max(0, s.paidFee - removedAmt);
+                    s.history.splice(txnIndex, 1);
+                    saveData();
+                    renderStudents(students);
+                    renderAllTransactions();
+                }
+            }
+        }
+
+        /* --- Print / Save Receipt Modal --- */
+        function openPrintModal(student, txn) {
+            document.getElementById('recReceiptNo').textContent = txn.receiptNo;
+            document.getElementById('recDate').textContent = txn.date;
+            document.getElementById('recName').textContent = student.name;
+            document.getElementById('recRoll').textContent = student.roll;
+            document.getElementById('recClass').textContent = student.class;
+            document.getElementById('recMode').textContent = txn.mode;
+            document.getElementById('recAmount').textContent = '₹' + txn.amount.toLocaleString('en-IN');
+            document.getElementById('recNote').textContent = txn.note || '-';
+            document.getElementById('recTotal').textContent = '₹' + student.totalFee.toLocaleString('en-IN');
+            document.getElementById('recTotalPaid').textContent = '₹' + student.paidFee.toLocaleString('en-IN');
+            const due = Math.max(0, student.totalFee - student.paidFee);
+            document.getElementById('recBalanceDue').textContent = '₹' + due.toLocaleString('en-IN');
+
+            document.getElementById('printModal').classList.remove('hidden');
+            document.getElementById('printModal').classList.add('flex');
+        }
+
+        function closePrintModal() {
+            document.getElementById('printModal').classList.add('hidden');
+            document.getElementById('printModal').classList.remove('flex');
+        }
+
+        /* --- Export & Admin Functions --- */
+        function exportToCSV() {
+            let csv = "Roll No,Student Name,Class,Parent Name,Mobile,Address,Total Fee (INR),Paid Fee (INR),Balance Due (INR)\n";
+            students.forEach(s => {
+                const due = Math.max(0, s.totalFee - s.paidFee);
+                csv += `"${s.roll}","${s.name}","${s.class}","${s.parent}","${s.mobile}","${s.address}",${s.totalFee},${s.paidFee},${due}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `Bhanu_Public_School_Students_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        function exportTransactionsCSV() {
+            let csv = "Receipt No,Date,Student Name,Class,Roll No,Amount (INR),Payment Mode,Note\n";
+            students.forEach(s => {
+                if (s.history) {
+                    s.history.forEach(h => {
+                        csv += `"${h.receiptNo}","${h.date}","${s.name}","${s.class}","${s.roll}",${h.amount},"${h.mode}","${h.note}"\n`;
+                    });
+                }
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `Bhanu_Public_School_Transactions_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        function exportJSONBackup() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(students, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `bhanu_public_school_backup_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchor.click();
+        }
+
+        function resetDefaultData() {
+            if (confirm('Are you sure you want to reset and reload sample student records?')) {
+                localStorage.removeItem('bps_students');
+                location.reload();
+            }
+        }
+    </script>
+
+    <!-- Edit Student Modal -->
+    <div id="editStudentModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl max-h-[90vh] overflow-y-auto">
+            <h3 class="text-base font-bold text-indigo-900 mb-1">Edit Student Details</h3>
+            <p class="text-xs text-slate-500 mb-3">Update profile information and annual fee structure</p>
+            
+            <form onsubmit="saveStudentEdits(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Student Full Name *</label>
+                    <input type="text" id="editName" required class="w-full p-2.5 border border-slate-300 rounded-xl text-xs outline-none focus:border-indigo-900">
+                </div>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Class *</label>
+                        <input type="text" id="editClass" required class="w-full p-2.5 border border-slate-300 rounded-xl text-xs outline-none focus:border-indigo-900">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Roll / Admission No *</label>
+                        <input type="text" id="editRoll" required class="w-full p-2.5 border border-slate-300 rounded-xl text-xs outline-none focus:border-indigo-900">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Parent Name *</label>
+                    <input type="text" id="editParent" required class="w-full p-2.5 border border-slate-300 rounded-xl text-xs outline-none focus:border-indigo-900">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Mobile Number *</label>
+                    <input type="tel" id="editMobile" required class="w-full p-2.5 border border-slate-300 rounded-xl text-xs outline-none focus:border-indigo-900">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Address *</label>
+                    <input type="text" id="editAddress" required class="w-full p-2.5 border border-slate-300 rounded-xl text-xs outline-none focus:border-indigo-900">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Total Annual Fee (₹) *</label>
+                    <input type="number" id="editTotalFee" required min="0" class="w-full p-2.5 border border-slate-300 rounded-xl text-xs outline-none focus:border-indigo-900">
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="closeEditStudentModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl text-xs">Cancel</button>
+                    <button type="submit" class="flex-1 bg-indigo-900 hover:bg-indigo-800 text-white font-bold py-2.5 rounded-xl text-xs">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
